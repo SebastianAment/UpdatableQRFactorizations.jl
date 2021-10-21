@@ -2,24 +2,7 @@
 struct GivensQ{T, QT<:AbstractVector{<:Givens{T}}} <: Factorization{T}
     rotations::QT
     n::Int
-    m::Int # necessary?
-end
-
-@inline function LinearAlgebra.lmul!(G::Givens{<:Real}, A::AbstractVecOrMat)
-    LinearAlgebra.require_one_based_indexing(A)
-    m, n = size(A, 1), size(A, 2)
-    if G.i1 > m || G.i2 > m # TODO: add this if statement in Julia Base for stability
-        println(G.i1)
-        println(G.i2)
-        println(m)
-        throw(DimensionMismatch("column indices for rotation are outside the matrix"))
-    end
-    @inbounds for i = 1:n
-        a1, a2 = A[G.i1,i], A[G.i2,i]
-        A[G.i1,i] =       G.c *a1 + G.s*a2
-        A[G.i2,i] = -conj(G.s)*a1 + G.c*a2
-    end
-    return A
+    m::Int
 end
 
 # r controls how many columns of Q we instantiate

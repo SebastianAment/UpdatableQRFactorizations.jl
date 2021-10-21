@@ -49,7 +49,6 @@ using UpdatableQRFactorizations
         @test F \ (A*X) ≈ X
     end
 
-    r = 2m # maximum rank is twice second dimension of A
     @testset "UpdatableQR" begin
         F = UpdatableQR(A)
         @test Matrix(F) ≈ A
@@ -99,6 +98,16 @@ using UpdatableQRFactorizations
             @test Q'Q ≈ I(n) # maintains orthogonality
         end
 
+        # testing empty initialization
+        F = UpdatableQR(n, m)
+        @test size(F) == (n, 0)
+        @test Matrix(F) ≈ zeros(n, 0)
+
+        order = reverse(1:m) # adding columns of A in reverse order (but to front of factorization)
+        for i in order
+            add_column!(F, A[:, i], 1)
+        end
+        @test Matrix(F) ≈ A
     end
 
     # multiply is very efficient!

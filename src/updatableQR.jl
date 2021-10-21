@@ -25,6 +25,8 @@ end
 
 function UpdatableGivensQR!(A::AbstractMatrix, r::Int = size(A, 1))
     n, m = size(A)
+    n ≥ r || throw("maximum rank r = $r has to be smaller or equal to n = $n")
+    r ≥ m || throw("maximum rank r = $r has to be larger or equal to m = $m")
     T = eltype(A)
     rotations_full = allocate_rotations(T, n, r)
     rot_index = number_of_rotations(n, m)
@@ -36,8 +38,25 @@ function UpdatableGivensQR!(A::AbstractMatrix, r::Int = size(A, 1))
     perm_full = collect(1:r)
     UpdatableGivensQR(rotations_full, rot_index, R_full, Qx, perm_full, n, m)
 end
+# constructor that pre-allocates memory without starting a qr factorization
+UpdatableGivensQR(n::Int, r::Int) = UpdatableGivensQR(Float64, n, r)
+function UpdatableGivensQR(T::DataType, n::Int, r::Int)
+    n ≥ r || throw("maximum rank r = $r has to be smaller or equal to n = $n")
+    rotations_full = allocate_rotations(T, n, r)
+    rot_index = 0
+    R_full = zeros(T, r, r)
+    Qx = zeros(T, n)
+    perm_full = collect(1:r)
+    m = 0
+    UpdatableGivensQR(rotations_full, rot_index, R_full, Qx, perm_full, n, m)
+end
+
 # copying underlying data so that future changes in F don't change GivensQR structure
 GivensQR(F::UpdatableGivensQR) = GivensQR(copy(F.Q), copy(F.R), F.n, F.m)
+function Base.copy(F::UpdatableGivensQR)
+    UpdatableGivensQR(copy(F.rotations_full), F.rot_index, copy(F.R_full),
+                      copy(F.Qx), copy(F.perm_full), F.n, F.m)
+end
 
 function Base.getproperty(F::UpdatableGivensQR, s::Symbol)
     if s == :Q
@@ -56,9 +75,7 @@ end
 Base.eltype(F::UGQR{T}) where T = T
 Base.size(F::UGQR) = (F.n, F.m)
 Base.size(F::UGQR, i::Int) = i > 2 ? 1 : size(F)[i]
-# Base.Matrix(F::UGQR) = Matrix(F.uqr)[:, invperm(F.perm)] F.Q * F.R
-# Base.AbstractMatrix(F::UGQR) = Matrix(F)
-
+Base.AbstractMatrix(F::UGQR) = Matrix(F)
 function Base.Matrix(F::UQR)
     n, m = size(F)
     A = zeros(eltype(F), n, m)
@@ -93,6 +110,7 @@ WARNING: Overwrites existing factorization.
 """
 function add_column!(F::UpdatableGivensQR, x::AbstractVector, k::Int = size(F, 2) + 1)
     length(x) == size(F, 1) || throw(DimensionMismatch("length of input not equal to first dimension of UpdatableQR factorization"))
+    F.m < length(F.perm_full) || throw("cannot add another column to factorization with maximum rank $(length(F.perm_full))")
     for (i, p) in enumerate(F.perm)
         if p ≥ k # incrementing indices above k
             F.perm[i] = p+1
@@ -111,7 +129,11 @@ end
 function append_column!(x::AbstractVector, rotations::AbstractVector{<:Givens},
                         rot_index::Int, R::AbstractMatrix, m::Int)
     n = length(x)
-    size(R, 2) > m || throw("cannot add column to factorization with maximum rank $(size(R, 2))")
+    size(R, 2) > m || throw("cannot add another column to factorization with maximum rank $(size(R, 2))")
+
+    # check if there's enough space in rotations left to carry out this addition
+    ensure_space_to_append_column!(rotations, rot_index, n, m)
+
     Q = GivensQ(@view(rotations[1:rot_index]), n, m)
     Qx = lmul!(Q', x) # overwriting x
     for i in n:-1:m+2 # zero out the "spike"
@@ -124,6 +146,16 @@ function append_column!(x::AbstractVector, rotations::AbstractVector{<:Givens},
     return rot_index
 end
 
+function ensure_space_to_append_column!(rotations::AbstractVector{<:Givens},
+                        rot_index::Int, n::Int, m::Int, verbose::Bool = false)
+    nrot = length(rotations) - rot_index # number of rotations left to add in rotations vector
+    nrot_to_add = number_of_rotations_to_append_column(n, m)
+    if nrot < nrot_to_add
+        verbose && println("INFO: adding more memory for Givens rotations in append_column!")
+        append!(rotations, Vector{eltype(rotations)}(undef, nrot_to_add - nrot))
+    end
+    return rotations
+end
 
 """
 remove_column!(F::UpdatableGivensQR, k::Int = size(F, 2))
@@ -153,7 +185,10 @@ end
 function remove_column!(R::AbstractMatrix, rotations::AbstractVector{<:Givens}, k::Int = size(F, 2))
     m = size(R, 2)
     1 <= k <= m || throw(DimensionMismatch("index $k not in range [1, $m]"))
-    length(rotations) ≥ m-k || throw(DimensionMismatch("not enough allocated space in rotations vector to remove column"))
+
+    # check if there's enough space in rotations left to carry out this removal
+    ensure_space_to_remove_column!(rotations, m, k)
+
     rot_index = 0
     for i in k+1:m # zero out subdiagonal of submatrix following kth column
         Ri = @view R[:, i:end]
@@ -170,13 +205,13 @@ function remove_column!(R::AbstractMatrix, rotations::AbstractVector{<:Givens}, 
     return rot_index # this is generally m-k, important to increment the rot_index of the factorization
 end
 
-# function LinearAlgebra.ldiv!(y::AbstractVector, F::UGQR, x::AbstractVector)
-#     ldiv!(y, F.uqr, x)
-#     invpermute!(y, P.perm) # I believe this still allocates the invperm
-#     #invpermute!!(y, P.perm) # this changes P.perm!
-# end
-# function LinearAlgebra.ldiv!(F::UGQR, x::AbstractVector)
-#     ldiv!(y, P.uqr, x)
-#     invpermute!(y, P.perm) # I believe this still allocates the invperm
-#     #invpermute!!(y, P.perm) # this changes P.perm!
-# end
+function ensure_space_to_remove_column!(rotations::AbstractVector{<:Givens},
+                                        m::Int, k::Int, verbose::Bool = false)
+    nrot = length(rotations)
+    nrot_to_remove = number_of_rotations_to_remove_column(m, k)
+    if nrot < nrot_to_remove
+        verbose && println("INFO: adding more memory for Givens rotations in remove_column!")
+        append!(rotations, Vector{eltype(rotations)}(undef, nrot_to_remove-nrot))
+    end
+    return rotations
+end
