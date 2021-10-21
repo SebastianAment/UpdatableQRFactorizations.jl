@@ -33,11 +33,6 @@ function LinearAlgebra.lmul!(A::Adjoint{<:Any, <:GivensQ}, X::AbstractVecOrMat)
 end
 LinearAlgebra.rmul!(X::AbstractVecOrMat, F::GivensQ) = lmul!(F', X')'
 LinearAlgebra.rmul!(X::AbstractVecOrMat, F::Adjoint{<:Any, <:GivensQ}) = lmul!(F', X')'
-# IDEA: 5-arg mul?
-# function LinearAlgebra.mul!(y::AbstractVector, F::GivensQ, x::AbstractVector)
-#     @. y = x
-#     lmul!(F, y)
-# end
 
 lmul(F, X) = lmul!(F, copy(X))
 rmul(X, F) = rmul!(copy(X), F)
@@ -66,3 +61,21 @@ LinearAlgebra.ldiv!(F::GivensQ, x::AbstractVector) = lmul!(F', x)
 LinearAlgebra.ldiv!(F::Adjoint{<:Any, <:GivensQ}, x::AbstractVector) = lmul!(F', x)
 LinearAlgebra.ldiv!(F::GivensQ, X::AbstractMatrix) = lmul!(F', X)
 LinearAlgebra.ldiv!(F::Adjoint{<:Any, <:GivensQ}, X::AbstractMatrix) = lmul!(F', X)
+
+
+function LinearAlgebra.mul!(y::AbstractVector, F::GivensQ, x::AbstractVector)
+    @. y = x
+    lmul!(F, y)
+end
+function LinearAlgebra.mul!(Y::AbstractMatrix, F::GivensQ, X::AbstractMatrix)
+    @. Y = X
+    lmul!(F, Y)
+end
+function LinearAlgebra.mul!(y::AbstractVector, F::Adjoint{<:Any, <:GivensQ}, x::AbstractVector)
+    @. y = x
+    lmul!(F, y)
+end
+function LinearAlgebra.mul!(Y::AbstractMatrix, F::Adjoint{<:Any, <:GivensQ}, X::AbstractMatrix)
+    @. Y = X
+    lmul!(F, Y)
+end

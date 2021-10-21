@@ -34,6 +34,15 @@ using UpdatableQRFactorizations
         @test X*Q' ≈ X*F.Q'
         @test Q \ (Q*X') ≈ X'
         @test Q' \ (Q'*X') ≈ X'
+
+        x = randn(n)
+        y = similar(x)
+        X = randn(n, r)
+        Y = similar(X)
+        @test mul!(y, F.Q, x) ≈ Q*x
+        @test mul!(Y, F.Q, X) ≈ Q*X
+        @test mul!(y, F.Q', x) ≈ Q'*x
+        @test mul!(Y, F.Q', X) ≈ Q'*X
     end
 
     @testset "GivensQR" begin
