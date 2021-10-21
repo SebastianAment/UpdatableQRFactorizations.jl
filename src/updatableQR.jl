@@ -175,21 +175,19 @@ function remove_column!(F::UpdatableGivensQR, k::Int = size(F, 2))
             perm[i] = p-1
         end
     end
-    rotations = @view F.rotations_full[F.rot_index+1:end]
-    F.rot_index += remove_column!(F.R, rotations, i)
+    F.rot_index = remove_column!(F.R, F.rotations_full, F.rot_index, i)
     F.m -= 1
     return F
 end
 
-# NOTE: rotation just have to be empty space for new rotations to be added
-function remove_column!(R::AbstractMatrix, rotations::AbstractVector{<:Givens}, k::Int = size(F, 2))
+function remove_column!(R::AbstractMatrix, rotations::AbstractVector{<:Givens},
+                        rot_index::Int, k::Int = size(F, 2))
     m = size(R, 2)
     1 <= k <= m || throw(DimensionMismatch("index $k not in range [1, $m]"))
 
     # check if there's enough space in rotations left to carry out this removal
-    ensure_space_to_remove_column!(rotations, m, k)
+    ensure_space_to_remove_column!(rotations, rot_index, m, k)
 
-    rot_index = 0
     for i in k+1:m # zero out subdiagonal of submatrix following kth column
         Ri = @view R[:, i:end]
         G, rho = givens(R[i-1, i], R[i, i], i-1, i)
@@ -206,8 +204,8 @@ function remove_column!(R::AbstractMatrix, rotations::AbstractVector{<:Givens}, 
 end
 
 function ensure_space_to_remove_column!(rotations::AbstractVector{<:Givens},
-                                        m::Int, k::Int, verbose::Bool = false)
-    nrot = length(rotations)
+                        rot_index::Int, m::Int, k::Int, verbose::Bool = false)
+    nrot = length(rotations) - rot_index
     nrot_to_remove = number_of_rotations_to_remove_column(m, k)
     if nrot < nrot_to_remove
         verbose && println("INFO: adding more memory for Givens rotations in remove_column!")
