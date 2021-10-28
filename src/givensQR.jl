@@ -22,8 +22,6 @@ function GivensQR!(A::AbstractMatrix, rotations::AbstractVector{<:Givens})
             rotations[rot_index] = G
             rot_index += 1
         end
-        # Aj = @view A[:, j] # the above is more efficient if constructing an entire factorization (probably due to BLAS3)
-        # rot_index = append_column!(Aj, rotations, rot_index, A, j-1)
     end
     Q = GivensQ(rotations, n, m)
     R = UpperTriangular(@view(A[1:m, 1:m]))

@@ -19,7 +19,9 @@ number_of_rotations(n::Int, m::Int) = n*m - (m*(m+1)) ÷ 2
 number_of_rotations(A::AbstractMatOrFac) = number_of_rotations(size(A)...)
 # min_nm = min(m, m) # IDEA: for overdetermined systems
 
-number_of_rotations_to_append_column(n::Int, m::Int) = max(n-(m+1), 0)
+# to append k columns
+number_of_rotations_to_append_column(n::Int, m::Int, k::Int = 1) = k*(n-m) - (k*(k+1)) ÷ 2
+# to remove a single column at index k in R
 number_of_rotations_to_remove_column(m::Int, k::Int) = m-k
 
 """

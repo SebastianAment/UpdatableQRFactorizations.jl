@@ -1,11 +1,12 @@
 module TestUpdatableQRFactorizations
 using LinearAlgebra
+using LinearAlgebra: Givens
 using Test
 using UpdatableQRFactorizations
 
 @testset "UpdatableQRFactorizations" begin
 
-    n, m = 32, 8
+    n, m = 32, 8 # NOTE: a test of UpdatableQR assumes n = 4m
     A = randn(n, m)
     F = GivensQR(A)
 
@@ -43,6 +44,13 @@ using UpdatableQRFactorizations
         @test mul!(Y, F.Q, X) ≈ Q*X
         @test mul!(y, F.Q', x) ≈ Q'*x
         @test mul!(Y, F.Q', X) ≈ Q'*X
+
+        # GivensQ with empty rotations vector behaves like identity
+        Qid = GivensQ(Vector{Givens{Float64}}(undef, 0), n, m)
+        @. y = x
+        @test lmul!(Qid, x) ≈ y
+        @test lmul!(Qid', x) ≈ y
+        @test Matrix(Qid) ≈ I(n)
     end
 
     @testset "GivensQR" begin
@@ -117,6 +125,23 @@ using UpdatableQRFactorizations
             add_column!(F, A[:, i], 1)
         end
         @test Matrix(F) ≈ A
+
+        F = UpdatableQR(n, m)
+        add_column!(F, A) # adding all columns in A simultaneously
+        @test Matrix(F) ≈ A
+
+        # try out full rank QR
+        F = UpdatableQR(n, n) # NOTE: assumes n = 4m
+        add_column!(F, A)
+        add_column!(F, A)
+        add_column!(F, A)
+        add_column!(F, A)
+        M = Matrix(F)
+        @test size(M) == (n, n)
+        for i in 1:4
+            Mi = @view M[:, m*(i-1)+1:m*(i-1)+m]
+            @test Mi ≈ A
+        end
     end
 
     # multiply is very efficient!

@@ -6,6 +6,7 @@ struct GivensQ{T, QT<:AbstractVector{<:Givens{T}}} <: Factorization{T}
 end
 
 # r controls how many columns of Q we instantiate
+# NOTE: this also works if rotations is empty (returns identity matrix)
 function Base.Matrix(F::GivensQ, r::Int = size(F, 2))
     n, m = size(F)
     Q = Matrix(one(eltype(F))*I, n, r)
@@ -15,8 +16,7 @@ Base.size(F::GivensQ) = (F.n, F.n) # could be square but also (n, m)?
 Base.size(F::GivensQ, i::Int) = i > 2 ? 1 : size(F)[i]
 Base.copy(F::GivensQ) = GivensQ(copy(F.rotations), F.n, F.m)
 Base.adjoint(F::GivensQ) = Adjoint(F)
-
-# IDEA: can have special version that adapts to size of x (only applies relevant rotations)
+# NOTE: this also works if rotations is empty (is identity operator)
 function LinearAlgebra.lmul!(F::GivensQ, X::AbstractVecOrMat)
     m = size(X, 1)
     for G in Iterators.reverse(F.rotations) # the adjoint of a GivensQ reverses the order of the rotations

@@ -8,6 +8,7 @@ export AbstractQR, GivensQ, GivensQR, UpdatableGivensQR, UpdatableQR, UQR,
 
 const AbstractMatOrFac{T} = Union{AbstractMatrix{T}, Factorization{T}}
 
+# IDEA: could have efficient version for sparse matrices
 include("abstract.jl")
 include("givensQ.jl")
 include("givensQR.jl")
