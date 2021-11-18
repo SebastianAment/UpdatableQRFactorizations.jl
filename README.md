@@ -1,4 +1,5 @@
 # UpdatableQRFactorizations.jl
+[![CI](https://github.com/SebastianAment/UpdatableQRFactorizations.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/SebastianAment/UpdatableQRFactorizations.jl/actions/workflows/CI.yml)
 [![codecov](https://codecov.io/gh/SebastianAment/UpdatableQRFactorizations.jl/branch/master/graph/badge.svg?token=HPB1TBAYAU)](https://codecov.io/gh/SebastianAment/UpdatableQRFactorizations.jl)
 
 This package contains implementations of efficient representations and updating algorithms for QR factorizations.
