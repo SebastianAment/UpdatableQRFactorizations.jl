@@ -58,7 +58,7 @@ add_column!(F::UpdatableGivensQR, x::AbstractVector, k::Int = size(F, 2) + 1).
 ```
 Given an existing QR factorization `F` of a matrix, `add_column!` computes the factorization of
 the same matrix after a new column `x` has been added as the `k`ᵗʰ column.
-Computational complexity: O(nm) where size(F) = (n, m).
+Computational complexity: `O(nm)` where `size(F) = (n, m)`.
 This overwrites the existing factorization.
 The package also supports the addition of multiple columns with a single call with performance benefits:
 ```julia
@@ -74,7 +74,7 @@ remove_column!(F::UpdatableGivensQR, k::Int = size(F, 2))
 ```
 Updates the existing QR factorization `F` of a matrix to the factorization of
 the same matrix after its kᵗʰ column has been deleted.
-Computational complexity: O(m^2) where size(F) = (n, m).
+Computational complexity: `O(m²)` where `size(F) = (n, m)`.
 
 ## On Efficiency
 
