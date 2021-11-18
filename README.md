@@ -1,4 +1,6 @@
 # UpdatableQRFactorizations.jl
+[![codecov](https://codecov.io/gh/SebastianAment/UpdatableQRFactorizations.jl/branch/master/graph/badge.svg?token=HPB1TBAYAU)](https://codecov.io/gh/SebastianAment/UpdatableQRFactorizations.jl)
+
 This package contains implementations of efficient representations and updating algorithms for QR factorizations.
 Notably, the implementations can scale to very high dimensions and moderately large numbers of columns even if memory is not abundant.
 
