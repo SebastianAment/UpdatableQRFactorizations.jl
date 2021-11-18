@@ -9,6 +9,19 @@ using UpdatableQRFactorizations
     n, m = 32, 8 # NOTE: a test of UpdatableQR assumes n = 4m
     A = randn(n, m)
     F = GivensQR(A)
+    @test F isa GivensQR
+
+    # testing size
+    @test size(F) == (n, m)
+    for i in 1:3
+        @test size(F, 1) == size(A, 1)
+    end
+
+    # testing copy
+    CF = copy(F)
+    @test CF.Q == F.Q
+    @test CF.R == F.R
+    @test size(CF) == size(F)
 
     @testset "GivensQ" begin
         Q = Matrix(F.Q)

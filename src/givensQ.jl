@@ -54,7 +54,7 @@ function Base.:*(F::Adjoint{<:Any, <:GivensQ}, G::GivensQ)
     F' === G ? (one(T) * I)(G.n) : F * Matrix(G)
 end
 function Base.:(==)(F::GivensQ, G::GivensQ)
-    F.rotations == G.rotation && F.n == G.n && F.m == G.m
+    F.rotations == G.rotations && F.n == G.n && F.m == G.m
 end
 
 LinearAlgebra.ldiv!(F::GivensQ, x::AbstractVector) = lmul!(F', x)
