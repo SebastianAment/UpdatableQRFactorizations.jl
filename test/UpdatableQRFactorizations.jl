@@ -74,9 +74,11 @@ using UpdatableQRFactorizations
         x = randn(m)
         Ax = A*x
         @test F \ (A*x) ≈ x
+        @test F \ complex(A*x) ≈ x
         r = 4
         X = randn(m, r)
         @test F \ (A*X) ≈ X
+        @test F \ complex(A*X) ≈ X
     end
 
     @testset "UpdatableQR" begin

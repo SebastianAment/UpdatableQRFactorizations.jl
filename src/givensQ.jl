@@ -32,8 +32,17 @@ function LinearAlgebra.lmul!(A::AdjointQ{<:Any, <:GivensQ}, X::AbstractVecOrMat)
     end
     return X
 end
+# disambiguation
+LinearAlgebra.lmul!(F::GivensQ, X::LinearAlgebra.AbstractTriangular) = lmul!(F, full!(X))
+LinearAlgebra.lmul!(A::AdjointQ{<:Any, <:GivensQ}, X::LinearAlgebra.AbstractTriangular) =
+    lmul!(F, full!(X))
+
 LinearAlgebra.rmul!(X::AbstractVecOrMat, F::GivensQ) = lmul!(F', X')'
 LinearAlgebra.rmul!(X::AbstractVecOrMat, F::AdjointQ{<:Any, <:GivensQ}) = lmul!(F', X')'
+# disambiguation
+LinearAlgebra.rmul!(X::LinearAlgebra.AbstractTriangular, F::GivensQ) = lmul!(F', X')'
+LinearAlgebra.rmul!(X::LinearAlgebra.AbstractTriangular, F::AdjointQ{<:Any, <:GivensQ}) =
+    lmul!(F', X')'
 
 function Base.:*(F::GivensQ, G::AdjointQ{<:Any, <:GivensQ})
     T = promote_type(eltype(F), eltype(G))
@@ -43,6 +52,7 @@ function Base.:*(F::AdjointQ{<:Any, <:GivensQ}, G::GivensQ)
     T = promote_type(eltype(F), eltype(G))
     F' === G ? (one(T) * I)(G.n) : F * Matrix(G)
 end
+
 function Base.:(==)(F::GivensQ, G::GivensQ)
     F.rotations == G.rotations && F.n == G.n && F.m == G.m
 end
@@ -53,8 +63,8 @@ if VERSION < v"1.10-"
 
     Base.:*(F::GivensQ, X::AbstractVector) = lmul(F, X)
     Base.:*(F::GivensQ, X::AbstractMatrix) = lmul(F, X)
-    Base.:*(F::AdjointQ{<:Any, <:GivensQ}, X::AbstractVector) = lmul(F, X)
-    Base.:*(F::AdjointQ{<:Any, <:GivensQ}, X::AbstractMatrix) = lmul(F, X)
+    Base.:*(F::Adjoint{<:Any, <:GivensQ}, X::AbstractVector) = lmul(F, X)
+    Base.:*(F::Adjoint{<:Any, <:GivensQ}, X::AbstractMatrix) = lmul(F, X)
 
     Base.:*(X::AbstractMatrix, F::GivensQ) = rmul(X, F)
     Base.:*(X::AbstractMatrix, F::AdjointQ{<:Any, <:GivensQ}) = rmul(X, F)
@@ -78,10 +88,16 @@ if VERSION < v"1.10-"
     LinearAlgebra.mul!(Y::StridedMatrix, F::AdjointQ{<:Any, <:GivensQ}, X::StridedMatrix) =
         invoke(LinearAlgebra.mul!, Tuple{AbstractMatrix, AdjointQ{<:Any, <:GivensQ}, AbstractMatrix}, Y, F, X)
 
+    if VERSION < v"1.8-"
+        Base.:\(F::GivensQ, X::AbstractVector) = F'X
+        Base.:\(F::GivensQ, X::AbstractMatrix) = F'X
+        Base.:\(F::Adjoint{<:Any, <:GivensQ}, X::AbstractVector) = F'X
+        Base.:\(F::Adjoint{<:Any, <:GivensQ}, X::AbstractMatrix) = F'X
+    end
     LinearAlgebra.ldiv!(F::GivensQ, x::AbstractVector) = lmul!(F', x)
-    LinearAlgebra.ldiv!(F::AdjointQ{<:Any, <:GivensQ}, x::AbstractVector) = lmul!(F', x)
+    LinearAlgebra.ldiv!(F::Adjoint{<:Any, <:GivensQ}, x::AbstractVector) = lmul!(F', x)
     LinearAlgebra.ldiv!(F::GivensQ, X::AbstractMatrix) = lmul!(F', X)
-    LinearAlgebra.ldiv!(F::AdjointQ{<:Any, <:GivensQ}, X::AbstractMatrix) = lmul!(F', X)
+    LinearAlgebra.ldiv!(F::Adjoint{<:Any, <:GivensQ}, X::AbstractMatrix) = lmul!(F', X)
 
     function LinearAlgebra.mul!(y::AbstractVector, F::GivensQ, x::AbstractVector)
         @. y = x
