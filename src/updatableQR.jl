@@ -1,7 +1,7 @@
 """
-```
+
     UpdatableGivensQR <: AbstractQR <: Factorization
-```
+
 Holds storage for Givens rotations and the R matrix for a QR factorization.
 Allows for efficient addition and deletion of columns.
 See `add_column!` and `remove_column!`.
@@ -102,9 +102,9 @@ function LinearAlgebra.ldiv!(F::UQR, x::AbstractVecOrMat)
 end
 
 """
-```
+
     add_column!(F::UpdatableGivensQR, x::AbstractVector, k::Int = size(F, 2) + 1)
-```
+
 Given an existing QR factorization `F` of a matrix, computes the factorization of
 the same matrix after a new column `x` has been added as the `k`ᵗʰ column.
 Computational complexity: O(nm) where size(F) = (n, m).
@@ -195,9 +195,9 @@ function ensure_space_to_append_column!(rotations::AbstractVector{<:Givens},
 end
 
 """
-```
+
 remove_column!(F::UpdatableGivensQR, k::Int = size(F, 2))
-```
+
 Updates the existing QR factorization `F` of a matrix to the factorization of
 the same matrix after its kᵗʰ column has been deleted.
 Computational complexity: O(m²) where size(F) = (n, m).

@@ -3,15 +3,18 @@ abstract type AbstractQR{T} <: Factorization{T} end
 # AbstractQR assumes existence of n, m, Q, R fields
 Base.size(F::AbstractQR) = (F.n, F.m)
 Base.size(F::AbstractQR, i::Int) = i > 2 ? 1 : size(F)[i]
-Base.eltype(F::AbstractQR{T}) where T = T
+Base.eltype(::AbstractQR{T}) where T = T
 
 Base.:\(F::AbstractQR, x::AbstractVecOrMat) = ldiv!(F, copy(x))
+# disambiguation
+Base.:\(F::AbstractQR{T}, B::VecOrMat{Complex{T}}) where {T<:LinearAlgebra.BlasReal} =
+    complex.(F \ real(B), F \ imag(B))
 
 # some helpers
 """
-```
+
     number_of_rotations(n::Int, m::Int)
-```
+
 Computes the number of Givens rotations that are necessary to compute the QR
 factorization of a general matrix of size n by m.
 """
@@ -25,9 +28,9 @@ number_of_rotations_to_append_column(n::Int, m::Int, k::Int = 1) = k*(n-m) - (k*
 number_of_rotations_to_remove_column(m::Int, k::Int) = m-k
 
 """
-```
+
     allocate_rotations(T::DataType, n::Int, m::Int)
-```
+
 Allocates a vector of Givens rotations of a length that is necessary to compute
 the QR factorization of a general matrix of size n by m.
 """
